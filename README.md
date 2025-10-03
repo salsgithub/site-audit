@@ -3,7 +3,7 @@
 ## Background
 Demonstrates a crawler application written in Go to build a graph of available links on a web page. The resulting output will be in the `out` folder in the root as a Graph Viz dot file.
 
-This crawler leverages concurrency and data structures to ensure no re-visits to visited links as well as not exploring external links from the host.
+This crawler leverages concurrency and [data structures](https://www.github.com/salsgithub/godst) to ensure no re-visits to visited links as well as not exploring external links from the host.
 
 Improvements that could be made;
 
