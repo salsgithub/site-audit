@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  auditor:
+    build: .
+    image: site-audit
+    
+    environment:
+      - AUDIT_LOG_LEVEL=DEBUG
+      - AUDIT_START_URL=http://toscrape.com/
+      - AUDIT_AGENT=site-audit
+      - AUDIT_VALID_SCHEMES=https
+      - AUDIT_RESPECT_ROBOTS=TRUE
+      - AUDIT_MAX_WORKERS=10
+      - AUDIT_MAX_DEPTH=2
+
+    volumes:
+      - ./output:/app/out
