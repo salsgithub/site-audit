@@ -83,4 +83,4 @@ build: ## Build the application Go binary
 .PHONY: run
 run: ## Run the application
 	$(call print-target)
-	go run cmd/main.go
+	go run cmd/main.go -local=true

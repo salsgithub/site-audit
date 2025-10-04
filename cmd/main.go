@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -16,42 +15,36 @@ import (
 	"salsgithub.com/site-audit/internal/exporter"
 	"salsgithub.com/site-audit/internal/extractor"
 	"salsgithub.com/site-audit/internal/fetcher"
-	"salsgithub.com/site-audit/internal/slogx"
 )
-
-var (
-	logger      = slogx.New(slog.LevelInfo)
-	auditConfig = audit.Config{}
-	local       bool
-)
-
-func logAndExit(message string, err error) {
-	if logger == nil {
-		fmt.Printf("%s error: %v\n", message, err)
-	} else {
-		logger.Error(message, "error", err)
-	}
-	os.Exit(1)
-}
 
 func main() {
+	var (
+		auditConfig audit.Config
+		local       bool
+	)
 	fs := flag.NewFlagSet("site-audit", flag.ContinueOnError)
 	fs.BoolVar(&local, "local", false, "Running locally using .env in root")
 	audit.AddFlags(auditConfig, fs)
 	if err := fs.Parse(os.Args[1:]); err != nil {
-		logAndExit("Error parsing flags", err)
+		slog.Error("Error parsing flags", "err", err)
+		os.Exit(1)
 	}
-	if err := godotenv.Load(); err != nil && local {
-		logAndExit("Error loading .env", err)
+	if local {
+		if err := godotenv.Load(); err != nil && local {
+			slog.Error("Error loading .env", "err", err)
+			os.Exit(1)
+		}
 	}
 	if err := envdecode.Decode(&auditConfig); err != nil {
-		logAndExit("Error decoding audit config", err)
+		slog.Error("Error loading .env", "err", err)
+		os.Exit(1)
 	}
 	httpFetcher := fetcher.NewHTTPFetcher(auditConfig.Agent)
 	linkExtractor := extractor.NewLinkExtractor(extractor.WithDefaultIgnores())
 	auditor, err := audit.New(auditConfig, httpFetcher, linkExtractor)
 	if err != nil {
-		logAndExit("Error setting up auditer", err)
+		slog.Error("Auditor creation error", "err", err)
+		os.Exit(1)
 	}
 	// Guarantee export of graph regardless of how auditor exits
 	defer func() {
@@ -69,21 +62,21 @@ func main() {
 	select {
 	case err := <-done:
 		if err != nil {
-			logger.Error("Auditing complete with error", "err", err)
+			slog.Error("Auditing completed with error", "err", err)
 		} else {
-			logger.Info("Auditing complete successfully")
+			slog.Info("Auditing complete successfully")
 		}
 		return
 	case s := <-sig:
-		logger.Info("Signal received, shutting down", "signal", s)
+		slog.Info("Signal received, shutting down", "signal", s)
 		cancel()
 		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer shutdownCancel()
 		select {
 		case <-done:
-			logger.Info("Graceful shutdown complete")
+			slog.Info("Graceful shutdown complete")
 		case <-shutdownCtx.Done():
-			logger.Info("Graceful shutdown timed out, force quitting")
+			slog.Info("Graceful shutdown timed out, force quitting")
 		}
 	}
 }
