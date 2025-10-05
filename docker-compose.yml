@@ -7,7 +7,7 @@ services:
     
     environment:
       - AUDIT_LOG_LEVEL=DEBUG
-      - AUDIT_START_URL=http://toscrape.com/
+      - AUDIT_START_URL=http://google.com/
       - AUDIT_AGENT=site-audit
       - AUDIT_VALID_SCHEMES=https
       - AUDIT_RESPECT_ROBOTS=TRUE
